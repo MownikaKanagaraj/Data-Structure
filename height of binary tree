@@ -1,36 +1,53 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-typedef struct Node {
-    int data;
-    struct Node* left;
-    struct Node* right;
-} Node;
+// Definition for a binary tree node
+typedef struct TreeNode {
+    int value;
+    struct TreeNode* left;
+    struct TreeNode* right;
+} TreeNode;
 
-Node* newNode(int val) {
-    Node* node = (Node*)malloc(sizeof(Node));
-    node->data = val;
-    node->left = NULL;
-    node->right = NULL;
-    return node;
+// Function to create a new tree node
+TreeNode* createNode(int value) {
+    TreeNode* newNode = (TreeNode*)malloc(sizeof(TreeNode));
+    newNode->value = value;
+    newNode->left = NULL;
+    newNode->right = NULL;
+    return newNode;
 }
 
-int maxDepth(Node* node) {
-    if (node == NULL)
-        return 0;
-
-    int lDepth = maxDepth(node->left);
-    int rDepth = maxDepth(node->right);
-
-    return (lDepth > rDepth ? lDepth : rDepth) + 1;
+// Function to find the depth of a binary tree
+int findDepth(TreeNode* root) {
+    if (root == NULL) {
+        return -1; // return -1 if depth is defined as number of edges
+        // return 0; // return 0 if depth is defined as number of nodes
+    }
+    
+    int leftDepth = findDepth(root->left);
+    int rightDepth = findDepth(root->right);
+    
+    // The depth of the current node is 1 plus the maximum depth of its subtrees
+    return (leftDepth > rightDepth ? leftDepth : rightDepth) + 1;
 }
 
+// Example usage
 int main() {
-    Node* root = newNode(1);
-    root->left = newNode(2);
-    root->right = newNode(3);
-    root->left->left = newNode(4);
-    root->left->right = newNode(5);
-    printf("%d\n", maxDepth(root));
+    // Creating a binary tree:
+    //      1
+    //     / \
+    //    2   3
+    //   /
+    //  4
+    TreeNode* root = createNode(1);
+    root->left = createNode(2);
+    root->right = createNode(3);
+    root->left->left = createNode(4);
+
+    printf("Depth of the binary tree: %d\n", findDepth(root));
+
+    // Freeing allocated memory (not shown for brevity)
+    // A function to free the binary tree nodes would be needed here
+
     return 0;
 }
