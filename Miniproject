@@ -1,0 +1,158 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <string.h>
+#include <errno.h>
+
+
+#ifdef _WIN32
+    #define FILE_PATH "C:\\temp\\blood_units.dat"  
+#else
+    #define FILE_PATH "/tmp/blood_units.dat"       // For Linux/macOS
+#endif
+
+struct BloodGroup {
+    char group[5];
+    int unitsAvailable;
+};
+
+
+void addOrUpdateBloodUnits() {
+    FILE *fp;
+    struct BloodGroup bg;
+    struct BloodGroup temp;
+    int found = 0;
+
+    printf("Enter Blood Group (A, B, AB, O): ");
+    scanf("%s", bg.group);
+
+    printf("Enter Units to Add: ");
+    scanf("%d", &bg.unitsAvailable);
+
+   
+    fp = fopen(FILE_PATH, "rb+");
+    if (fp == NULL) {
+       
+        fp = fopen(FILE_PATH, "wb+");
+        if (fp == NULL) {
+            printf("Error opening file: %s\n", strerror(errno));
+            return;
+        }
+    }
+
+    
+    while (fread(&temp, sizeof(struct BloodGroup), 1, fp)) {
+        if (strcmp(temp.group, bg.group) == 0) {
+           
+            temp.unitsAvailable += bg.unitsAvailable;
+            fseek(fp, -sizeof(struct BloodGroup), SEEK_CUR);
+            fwrite(&temp, sizeof(struct BloodGroup), 1, fp);
+            found = 1;
+            break;
+        }
+    }
+
+   
+    if (!found) {
+        fwrite(&bg, sizeof(struct BloodGroup), 1, fp);
+    }
+
+    fclose(fp);
+    printf("Blood group units updated successfully!\n");
+}
+
+
+void checkBloodUnitsAvailability() {
+    FILE *fp;
+    struct BloodGroup bg;
+    char requestedGroup[5];
+    int requestedUnits;
+    int found = 0;
+
+    printf("Enter Blood Group to Check Availability (A, B, AB, O): ");
+    scanf("%s", requestedGroup);
+
+    printf("Enter Units Required: ");
+    scanf("%d", &requestedUnits);
+
+    fp = fopen(FILE_PATH, "rb");
+    if (fp == NULL) {
+        printf("Error opening file: %s\n", strerror(errno));
+        return;
+    }
+
+    
+    while (fread(&bg, sizeof(struct BloodGroup), 1, fp)) {
+        if (strcmp(bg.group, requestedGroup) == 0) {
+            found = 1;
+            if (bg.unitsAvailable >= requestedUnits) {
+                printf("Blood units are available! %d units of %s group.\n", bg.unitsAvailable, bg.group);
+            } else {
+                printf("Sorry, only %d units of %s group are available.\n", bg.unitsAvailable, bg.group);
+            }
+            break;
+        }
+    }
+
+    if (!found) {
+        printf("Sorry, %s group is not available in the blood bank.\n", requestedGroup);
+    }
+
+    fclose(fp);
+}
+
+
+void displayBloodUnits() {
+    FILE *fp;
+    struct BloodGroup bg;
+    
+    fp = fopen(FILE_PATH, "rb");
+    if (fp == NULL) {
+        printf("Error opening file: %s\n", strerror(errno));
+        return;
+    }
+
+    printf("\nAvailable Blood Units:\n");
+    printf("----------------------------\n");
+    printf("Blood Group    Units\n");
+    printf("----------------------------\n");
+
+    while (fread(&bg, sizeof(struct BloodGroup), 1, fp)) {
+        printf("%-12s %d\n", bg.group, bg.unitsAvailable);
+    }
+
+    fclose(fp);
+}
+
+
+int main() {
+    int choice;
+
+    while (1) {
+        printf("\nBlood Bank Management System\n");
+        printf("1. Add or Update Blood Units\n");
+        printf("2. Display Available Blood Units\n");
+        printf("3. Check Blood Units Availability\n");
+        printf("4. Exit\n");
+        printf("Enter your choice: ");
+        scanf("%d", &choice);
+
+        switch (choice) {
+            case 1:
+                addOrUpdateBloodUnits();
+                break;
+            case 2:
+                displayBloodUnits();
+                break;
+            case 3:
+                checkBloodUnitsAvailability();
+                break;
+            case 4:
+                printf("Exiting the program...\n");
+                exit(0);
+            default:
+                printf("Invalid choice! Please try again.\n");
+        }
+    }
+
+    return 0;
+}
